@@ -165,16 +165,10 @@ private fun BottomIcon(
     }
 }
 
-data class Persons(
-    @DrawableRes val image: Int,
-    val name: String,
-    val age: Int,
-)
-
 @Composable
 private fun SwappableCard(
-    person: Persons,
-    nextPerson: Persons? = null,
+    person: HomeViewModel.Persons,
+    nextPerson: HomeViewModel.Persons? = null,
     onSwipeLeft: () -> Unit,
     onSwipeRight: () -> Unit,
 ) {
@@ -273,62 +267,17 @@ private fun SwappableCard(
                 showDislike = showDislike,
             )
         }
-
-        // Mostrar el ícono del corazón
-        if (showLike) {
-            Icon(
-                painter = painterResource(R.drawable.baseline_favorite_24), // Reemplaza con tu recurso de corazón
-                contentDescription = "Like",
-                tint = Color.Red,
-                modifier = Modifier
-                    .size(100.dp)
-                    .align(Alignment.TopEnd)
-                    .padding(16.dp)
-            )
-        }
-
-        // Mostrar el ícono de la cruz
-        if (showDislike) {
-            Icon(
-                painter = painterResource(R.drawable.baseline_close_24), // Reemplaza con tu recurso de cruz
-                contentDescription = "Dislike",
-                tint = Color.Gray,
-                modifier = Modifier
-                    .size(100.dp)
-                    .align(Alignment.TopStart)
-                    .padding(16.dp)
-            )
-        }
     }
 }
 
 @Composable
 private fun Content(paddingValues: PaddingValues) {
     val cards = listOf(
-        Persons(R.drawable.men1, "John Doe", 25),
-        Persons(R.drawable.men2, "Jane Smith", 30),
-        Persons(R.drawable.women1, "Alice Brown", 40),
-        Persons(R.drawable.women2, "Bob Johnson", 35),
-        Persons(R.drawable.men1, "John Doe", 25),
-        Persons(R.drawable.men2, "Jane Smith", 30),
-        Persons(R.drawable.women1, "Alice Brown", 40),
-        Persons(R.drawable.women2, "Bob Johnson", 35),
-        Persons(R.drawable.men1, "John Doe", 25),
-        Persons(R.drawable.men2, "Jane Smith", 30),
-        Persons(R.drawable.women1, "Alice Brown", 40),
-        Persons(R.drawable.women2, "Bob Johnson", 35),
-        Persons(R.drawable.men1, "John Doe", 25),
-        Persons(R.drawable.men2, "Jane Smith", 30),
-        Persons(R.drawable.women1, "Alice Brown", 40),
-        Persons(R.drawable.women2, "Bob Johnson", 35),
-        Persons(R.drawable.men1, "John Doe", 25),
-        Persons(R.drawable.men2, "Jane Smith", 30),
-        Persons(R.drawable.women1, "Alice Brown", 40),
-        Persons(R.drawable.women2, "Bob Johnson", 35),
-        Persons(R.drawable.men1, "John Doe", 25),
-        Persons(R.drawable.men2, "Jane Smith", 30),
-        Persons(R.drawable.women1, "Alice Brown", 40),
-        Persons(R.drawable.women2, "Bob Johnson", 35)
+        HomeViewModel.Persons(
+            image = R.drawable.men1,
+            name = "John Doe",
+            age = 25
+        ),
     )
 
     var currentIndex by remember { mutableIntStateOf(0) }
@@ -394,6 +343,42 @@ private fun Card(
                     ),
                 contentScale = ContentScale.Crop,
             )
+        }
+        if (showLike) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Green.copy(alpha = 0.5f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.baseline_favorite_24),
+                    contentDescription = "Like",
+                    tint = Color.Green,
+                    modifier = Modifier
+                        .size(100.dp)
+                        .padding(16.dp)
+                )
+            }
+        }
+
+        // Mostrar el ícono de la cruz
+        if (showDislike) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Red.copy(alpha = 0.5f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.baseline_close_24),
+                    contentDescription = "Dislike",
+                    tint = Color.Red,
+                    modifier = Modifier
+                        .size(100.dp)
+                        .padding(16.dp)
+                )
+            }
         }
         Box(
             modifier = Modifier
