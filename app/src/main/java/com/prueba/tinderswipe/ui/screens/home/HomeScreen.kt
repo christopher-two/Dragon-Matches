@@ -4,7 +4,6 @@ import androidx.annotation.DrawableRes
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,12 +16,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -31,6 +30,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -62,7 +62,7 @@ private fun Screen() {
         content = { paddingValues -> Content(paddingValues) },
         bottomBar = { BottomBar() },
         topBar = { TopBar() },
-        containerColor = Color(0xFFE5E5E5)
+        containerColor = Color(0xFF000000)
     )
 }
 
@@ -74,11 +74,17 @@ fun TopBar() {
             containerColor = Color.Transparent
         ),
         title = {
-            Image(
-                painter = painterResource(id = R.drawable.tinder_2),
-                contentDescription = "Logo",
-                modifier = Modifier.size(32.dp)
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.tinder_2),
+                    contentDescription = "Logo",
+                    modifier = Modifier.size(32.dp)
+                )
+            }
         }
     )
 }
@@ -99,7 +105,7 @@ fun BottomBar() {
                 icon = R.drawable.baseline_refresh_24,
                 contentDescription = "Refresh",
                 color = Color.Yellow,
-                modifier = Modifier.size(40.dp),
+                modifier = Modifier.size(30.dp),
                 onClick = { /*TODO*/ }
             )
 
@@ -107,7 +113,7 @@ fun BottomBar() {
                 icon = R.drawable.baseline_close_24,
                 contentDescription = "Close",
                 color = Color.Red,
-                modifier = Modifier.size(50.dp),
+                modifier = Modifier.size(60.dp),
                 onClick = { /*TODO*/ }
             )
 
@@ -115,7 +121,7 @@ fun BottomBar() {
                 icon = R.drawable.baseline_star_24,
                 contentDescription = "Star",
                 color = Color.Cyan,
-                modifier = Modifier.size(40.dp),
+                modifier = Modifier.size(30.dp),
                 onClick = { /*TODO*/ }
             )
 
@@ -123,7 +129,7 @@ fun BottomBar() {
                 icon = R.drawable.baseline_favorite_24,
                 contentDescription = "Heart",
                 color = Color.Green,
-                modifier = Modifier.size(50.dp),
+                modifier = Modifier.size(60.dp),
                 onClick = { /*TODO*/ }
             )
 
@@ -131,7 +137,7 @@ fun BottomBar() {
                 icon = R.drawable.baseline_bolt_24,
                 contentDescription = "Bolt",
                 color = Color.Magenta,
-                modifier = Modifier.size(40.dp),
+                modifier = Modifier.size(30.dp),
                 onClick = { /*TODO*/ }
             )
         }
@@ -146,11 +152,9 @@ private fun BottomIcon(
     modifier: Modifier,
     onClick: () -> Unit
 ) {
-    Box(
-        modifier = Modifier
-            .wrapContentSize()
-            .clickable { onClick() }
-            .background(color = Color.White, shape = CircleShape)
+    IconButton(
+        onClick = onClick,
+        modifier = Modifier.background(color = Color(0x00FFFFFF), shape = CircleShape)
     ) {
         Icon(
             painter = painterResource(id = icon),
@@ -168,73 +172,133 @@ data class Persons(
 )
 
 @Composable
-private fun SwipeableCard(
+private fun SwappableCard(
     person: Persons,
     nextPerson: Persons? = null,
     onSwipeLeft: () -> Unit,
-    onSwipeRight: () -> Unit
+    onSwipeRight: () -> Unit,
 ) {
-    val swipeOffset = remember { Animatable(0f) } // Controla la posición de la tarjeta.
+    val swipeOffset = remember { Animatable(0f) }
     val density = LocalDensity.current
-    val screenWidthPx =
-        with(density) { LocalConfiguration.current.screenWidthDp.dp.toPx() } // Convierte a píxeles.
+    val screenWidthPx = with(density) { LocalConfiguration.current.screenWidthDp.dp.toPx() }
     val coroutineScope = rememberCoroutineScope()
 
+    var showLike by remember { mutableStateOf(false) }
+    var showDislike by remember { mutableStateOf(false) }
+
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp)
-            .offset {
-                IntOffset(
-                    swipeOffset.value.roundToInt(),
-                    0
-                )
-            } // Posición horizontal de la tarjeta.
-            .pointerInput(Unit) {
-                detectHorizontalDragGestures(
-                    onDragEnd = {
-                        coroutineScope.launch {
-                            when {
-                                swipeOffset.value > screenWidthPx / 3 -> {
-                                    onSwipeRight() // Acción de swipe derecha.
-                                    swipeOffset.animateTo(screenWidthPx) // Desliza fuera de la pantalla.
-                                    swipeOffset.animateTo(0f) // Vuelve al centro.
-                                }
-
-                                swipeOffset.value < -screenWidthPx / 3 -> {
-                                    onSwipeLeft() // Acción de swipe izquierda.
-                                    swipeOffset.animateTo(-screenWidthPx) // Desliza fuera de la pantalla.
-                                    swipeOffset.animateTo(0f) // Vuelve al centro.
-                                }
-
-                                else -> {
-                                    swipeOffset.animateTo(0f) // Vuelve al centro si no alcanza el límite.
-                                }
-                            }
-                        }
-                    },
-                    onHorizontalDrag = { _, dragAmount ->
-                        coroutineScope.launch {
-                            swipeOffset.snapTo(swipeOffset.value + dragAmount) // Actualiza posición mientras arrastra.
-                        }
-                    }
-                )
-            }
-            .graphicsLayer {
-                // Rotación sutil según la posición de swipe.
-                rotationZ = (swipeOffset.value / 80f).coerceIn(-50f, 50f)
-                alpha =
-                    1f - (kotlin.math.abs(swipeOffset.value) / screenWidthPx / 1.5f).coerceIn(
-                        0f,
-                        1f
-                    )
-            }
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
     ) {
-        Card(
-            image = person.image,
-            name = person.name,
-            age = person.age
-        )
+        if (nextPerson != null) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                Card(
+                    image = nextPerson.image,
+                    name = nextPerson.name,
+                    age = nextPerson.age,
+                )
+            }
+        }
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+                .offset {
+                    IntOffset(
+                        swipeOffset.value.roundToInt(),
+                        0
+                    )
+                }
+                .pointerInput(Unit) {
+                    detectHorizontalDragGestures(
+                        onHorizontalDrag = { _, dragAmount ->
+                            coroutineScope.launch {
+                                val newOffset = swipeOffset.value + dragAmount
+                                swipeOffset.snapTo(newOffset)
+
+                                val partialThreshold = screenWidthPx / 9
+
+                                // Mostrar íconos según el desplazamiento
+                                showLike = newOffset > partialThreshold
+                                showDislike = newOffset < -partialThreshold
+
+                                swipeOffset.snapTo(newOffset)
+                            }
+                        },
+                        onDragEnd = {
+                            coroutineScope.launch {
+                                when {
+                                    swipeOffset.value > screenWidthPx / 3 -> {
+                                        swipeOffset.animateTo(screenWidthPx)
+                                        onSwipeRight()
+                                        swipeOffset.snapTo(0f)
+                                    }
+
+                                    swipeOffset.value < -screenWidthPx / 3 -> {
+                                        swipeOffset.animateTo(-screenWidthPx)
+                                        onSwipeLeft()
+                                        swipeOffset.snapTo(0f)
+                                    }
+
+                                    else -> {
+                                        swipeOffset.animateTo(0f)
+                                    }
+                                }
+                                // Ocultar íconos al finalizar el gesto
+                                showLike = false
+                                showDislike = false
+                            }
+                        },
+                    )
+                }
+                .graphicsLayer {
+                    rotationZ = (swipeOffset.value / 80f).coerceIn(-10f, 10f)
+                    alpha =
+                        1f - (kotlin.math.abs(swipeOffset.value) / screenWidthPx / 1.5f).coerceIn(
+                            0f,
+                            1f
+                        )
+                }
+        ) {
+            Card(
+                image = person.image,
+                name = person.name,
+                age = person.age,
+                showLike = showLike,
+                showDislike = showDislike,
+            )
+        }
+
+        // Mostrar el ícono del corazón
+        if (showLike) {
+            Icon(
+                painter = painterResource(R.drawable.baseline_favorite_24), // Reemplaza con tu recurso de corazón
+                contentDescription = "Like",
+                tint = Color.Red,
+                modifier = Modifier
+                    .size(100.dp)
+                    .align(Alignment.TopEnd)
+                    .padding(16.dp)
+            )
+        }
+
+        // Mostrar el ícono de la cruz
+        if (showDislike) {
+            Icon(
+                painter = painterResource(R.drawable.baseline_close_24), // Reemplaza con tu recurso de cruz
+                contentDescription = "Dislike",
+                tint = Color.Gray,
+                modifier = Modifier
+                    .size(100.dp)
+                    .align(Alignment.TopStart)
+                    .padding(16.dp)
+            )
+        }
     }
 }
 
@@ -244,11 +308,32 @@ private fun Content(paddingValues: PaddingValues) {
         Persons(R.drawable.men1, "John Doe", 25),
         Persons(R.drawable.men2, "Jane Smith", 30),
         Persons(R.drawable.women1, "Alice Brown", 40),
+        Persons(R.drawable.women2, "Bob Johnson", 35),
+        Persons(R.drawable.men1, "John Doe", 25),
+        Persons(R.drawable.men2, "Jane Smith", 30),
+        Persons(R.drawable.women1, "Alice Brown", 40),
+        Persons(R.drawable.women2, "Bob Johnson", 35),
+        Persons(R.drawable.men1, "John Doe", 25),
+        Persons(R.drawable.men2, "Jane Smith", 30),
+        Persons(R.drawable.women1, "Alice Brown", 40),
+        Persons(R.drawable.women2, "Bob Johnson", 35),
+        Persons(R.drawable.men1, "John Doe", 25),
+        Persons(R.drawable.men2, "Jane Smith", 30),
+        Persons(R.drawable.women1, "Alice Brown", 40),
+        Persons(R.drawable.women2, "Bob Johnson", 35),
+        Persons(R.drawable.men1, "John Doe", 25),
+        Persons(R.drawable.men2, "Jane Smith", 30),
+        Persons(R.drawable.women1, "Alice Brown", 40),
+        Persons(R.drawable.women2, "Bob Johnson", 35),
+        Persons(R.drawable.men1, "John Doe", 25),
+        Persons(R.drawable.men2, "Jane Smith", 30),
+        Persons(R.drawable.women1, "Alice Brown", 40),
         Persons(R.drawable.women2, "Bob Johnson", 35)
     )
 
-    // Estado para manejar el índice de la carta actual.
     var currentIndex by remember { mutableIntStateOf(0) }
+    var like by remember { mutableStateOf(false) }
+    var dislike by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -257,19 +342,20 @@ private fun Content(paddingValues: PaddingValues) {
         contentAlignment = Alignment.Center
     ) {
         if (currentIndex < cards.size) {
-            val currentCard = cards[currentIndex] // Obtén la carta actual según el índice.
+            val currentCard = cards[currentIndex]
+            val nextPerson = cards.getOrNull(currentIndex + 1)
 
-            SwipeableCard(
+            SwappableCard(
                 person = currentCard,
+                nextPerson = nextPerson,
                 onSwipeLeft = {
-                    currentIndex += 1 // Avanza al siguiente índice.
+                    currentIndex += 1
                 },
                 onSwipeRight = {
-                    currentIndex += 1 // Avanza al siguiente índice.
-                }
+                    currentIndex += 1
+                },
             )
         } else {
-            // Muestra un mensaje cuando no hay más cartas.
             Text(
                 text = "No hay más personas.",
                 style = MaterialTheme.typography.bodyLarge,
@@ -284,6 +370,8 @@ private fun Card(
     @DrawableRes image: Int = R.drawable.men1,
     name: String = "john Doe",
     age: Int = 25,
+    showLike: Boolean = false,
+    showDislike: Boolean = false,
 ) {
     Box(
         modifier = Modifier
@@ -304,7 +392,7 @@ private fun Card(
                         elevation = 5.dp,
                         shape = RoundedCornerShape(16.dp)
                     ),
-                contentScale = ContentScale.Crop
+                contentScale = ContentScale.Crop,
             )
         }
         Box(
