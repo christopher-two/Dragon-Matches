@@ -7,49 +7,42 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.prueba.tinderswipe.R
+import com.prueba.tinderswipe.ui.components.Card
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
@@ -58,8 +51,15 @@ fun HomeScreen() = Screen()
 
 @Composable
 private fun Screen() {
+    val viewModel = HomeViewModel()
     Scaffold(
-        content = { paddingValues -> Content(paddingValues) },
+        content = { paddingValues ->
+            Content(
+                paddingValues,
+                viewModel.state.collectAsState().value,
+                viewModel
+            )
+        },
         bottomBar = { BottomBar() },
         topBar = { TopBar() },
         containerColor = Color(0xFF000000)
@@ -169,6 +169,8 @@ private fun BottomIcon(
 private fun SwappableCard(
     person: HomeViewModel.Persons,
     nextPerson: HomeViewModel.Persons? = null,
+    state: HomeViewModel.HomeState,
+    viewModel: HomeViewModel,
     onSwipeLeft: () -> Unit,
     onSwipeRight: () -> Unit,
 ) {
@@ -176,9 +178,6 @@ private fun SwappableCard(
     val density = LocalDensity.current
     val screenWidthPx = with(density) { LocalConfiguration.current.screenWidthDp.dp.toPx() }
     val coroutineScope = rememberCoroutineScope()
-
-    var showLike by remember { mutableStateOf(false) }
-    var showDislike by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier.fillMaxSize(),
@@ -217,10 +216,12 @@ private fun SwappableCard(
 
                                 val partialThreshold = screenWidthPx / 9
 
-                                // Mostrar íconos según el desplazamiento
-                                showLike = newOffset > partialThreshold
-                                showDislike = newOffset < -partialThreshold
-
+                                viewModel.update {
+                                    copy(
+                                        showLike = newOffset > partialThreshold,
+                                        showDislike = newOffset < -partialThreshold
+                                    )
+                                }
                                 swipeOffset.snapTo(newOffset)
                             }
                         },
@@ -243,9 +244,12 @@ private fun SwappableCard(
                                         swipeOffset.animateTo(0f)
                                     }
                                 }
-                                // Ocultar íconos al finalizar el gesto
-                                showLike = false
-                                showDislike = false
+                                viewModel.update {
+                                    copy(
+                                        showLike = false,
+                                        showDislike = false
+                                    )
+                                }
                             }
                         },
                     )
@@ -263,26 +267,20 @@ private fun SwappableCard(
                 image = person.image,
                 name = person.name,
                 age = person.age,
-                showLike = showLike,
-                showDislike = showDislike,
+                showLike = state.showLike,
+                showDislike = state.showDislike,
             )
         }
     }
 }
 
 @Composable
-private fun Content(paddingValues: PaddingValues) {
-    val cards = listOf(
-        HomeViewModel.Persons(
-            image = R.drawable.men1,
-            name = "John Doe",
-            age = 25
-        ),
-    )
-
+private fun Content(
+    paddingValues: PaddingValues,
+    state: HomeViewModel.HomeState,
+    viewModel: HomeViewModel
+) {
     var currentIndex by remember { mutableIntStateOf(0) }
-    var like by remember { mutableStateOf(false) }
-    var dislike by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -290,13 +288,15 @@ private fun Content(paddingValues: PaddingValues) {
             .padding(paddingValues),
         contentAlignment = Alignment.Center
     ) {
-        if (currentIndex < cards.size) {
-            val currentCard = cards[currentIndex]
-            val nextPerson = cards.getOrNull(currentIndex + 1)
+        if (currentIndex < state.persons.size) {
+            val currentCard = state.persons[currentIndex]
+            val nextPerson = state.persons.getOrNull(currentIndex + 1)
 
             SwappableCard(
                 person = currentCard,
                 nextPerson = nextPerson,
+                state = state,
+                viewModel = viewModel,
                 onSwipeLeft = {
                     currentIndex += 1
                 },
@@ -307,103 +307,9 @@ private fun Content(paddingValues: PaddingValues) {
         } else {
             Text(
                 text = "No hay más personas.",
-                style = MaterialTheme.typography.bodyLarge,
+                color = Color.White,
                 modifier = Modifier.padding(16.dp)
             )
-        }
-    }
-}
-
-@Composable
-private fun Card(
-    @DrawableRes image: Int = R.drawable.men1,
-    name: String = "john Doe",
-    age: Int = 25,
-    showLike: Boolean = false,
-    showDislike: Boolean = false,
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-    ) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-        ) {
-            Image(
-                painter = painterResource(id = image),
-                contentDescription = "Logo",
-                modifier = Modifier
-                    .fillMaxSize()
-                    .shadow(
-                        elevation = 5.dp,
-                        shape = RoundedCornerShape(16.dp)
-                    ),
-                contentScale = ContentScale.Crop,
-            )
-        }
-        if (showLike) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Green.copy(alpha = 0.5f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.baseline_favorite_24),
-                    contentDescription = "Like",
-                    tint = Color.Green,
-                    modifier = Modifier
-                        .size(100.dp)
-                        .padding(16.dp)
-                )
-            }
-        }
-
-        // Mostrar el ícono de la cruz
-        if (showDislike) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Red.copy(alpha = 0.5f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.baseline_close_24),
-                    contentDescription = "Dislike",
-                    tint = Color.Red,
-                    modifier = Modifier
-                        .size(100.dp)
-                        .padding(16.dp)
-                )
-            }
-        }
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            contentAlignment = Alignment.BottomStart
-        ) {
-            Row(
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = name,
-                    color = Color.White,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                )
-                Spacer(modifier = Modifier.padding(6.dp))
-                Text(
-                    text = age.toString(),
-                    color = Color.White,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Medium,
-                )
-            }
         }
     }
 }
