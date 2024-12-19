@@ -4,6 +4,7 @@ import androidx.annotation.DrawableRes
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,6 +20,7 @@ import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -36,47 +38,80 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.prueba.tinderswipe.R
+import com.prueba.tinderswipe.data.model.Persons
 import com.prueba.tinderswipe.ui.components.Card
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 @Composable
-fun HomeScreen() = Screen()
+fun HomeScreen(
+    onSwitchTheme: () -> Unit
+) = Screen(
+    onSwitchTheme = onSwitchTheme
+)
 
 @Composable
-private fun Screen() {
-    val viewModel = HomeViewModel()
+private fun Screen(
+    onSwitchTheme: () -> Unit
+) {
+    val context = LocalContext.current
+    val viewModel = HomeViewModel(context)
+    val state by viewModel.state.collectAsState()
     Scaffold(
         content = { paddingValues ->
             Content(
                 paddingValues,
-                viewModel.state.collectAsState().value,
+                state,
                 viewModel
             )
         },
         bottomBar = { BottomBar() },
-        topBar = { TopBar() },
-        containerColor = Color(0xFF000000)
+        topBar = {
+            TopBar(
+                homeViewModel = viewModel,
+                state = state,
+                onSwitchTheme = onSwitchTheme
+            )
+        },
+        containerColor = colorScheme.background
     )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TopBar() {
+fun TopBar(homeViewModel: HomeViewModel, state: HomeState, onSwitchTheme: () -> Unit) {
     TopAppBar(
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = Color.Transparent
         ),
+        actions = {
+            IconButton(
+                onClick = {
+                    onSwitchTheme()
+                    homeViewModel.switchTheme()
+                }
+            ) {
+                Icon(
+                    painter = painterResource(
+                        if (!state.darkMode) R.drawable.baseline_sunny_24 else R.drawable.baseline_mode_night_24
+                    ),
+                    contentDescription = "DarkMode",
+                    modifier = Modifier.size(30.dp),
+                    tint = if (!state.darkMode) Color.Black else Color.White
+                )
+            }
+        },
         title = {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
+                horizontalArrangement = Arrangement.Start,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Image(
@@ -105,7 +140,7 @@ fun BottomBar() {
                 icon = R.drawable.baseline_refresh_24,
                 contentDescription = "Refresh",
                 color = Color.Yellow,
-                modifier = Modifier.size(30.dp),
+                modifier = Modifier.size(40.dp),
                 onClick = { /*TODO*/ }
             )
 
@@ -121,7 +156,7 @@ fun BottomBar() {
                 icon = R.drawable.baseline_star_24,
                 contentDescription = "Star",
                 color = Color.Cyan,
-                modifier = Modifier.size(30.dp),
+                modifier = Modifier.size(40.dp),
                 onClick = { /*TODO*/ }
             )
 
@@ -137,7 +172,7 @@ fun BottomBar() {
                 icon = R.drawable.baseline_bolt_24,
                 contentDescription = "Bolt",
                 color = Color.Magenta,
-                modifier = Modifier.size(30.dp),
+                modifier = Modifier.size(40.dp),
                 onClick = { /*TODO*/ }
             )
         }
@@ -152,24 +187,28 @@ private fun BottomIcon(
     modifier: Modifier,
     onClick: () -> Unit
 ) {
-    IconButton(
-        onClick = onClick,
-        modifier = Modifier.background(color = Color(0x00FFFFFF), shape = CircleShape)
+    Box(
+        modifier = Modifier
+            .background(
+                color = color,
+                shape = CircleShape
+            )
+            .clickable { onClick }
     ) {
         Icon(
             painter = painterResource(id = icon),
             contentDescription = contentDescription,
             modifier = modifier.padding(2.dp),
-            tint = color,
+            tint = colorScheme.background,
         )
     }
 }
 
 @Composable
 private fun SwappableCard(
-    person: HomeViewModel.Persons,
-    nextPerson: HomeViewModel.Persons? = null,
-    state: HomeViewModel.HomeState,
+    person: Persons,
+    nextPerson: Persons? = null,
+    state: HomeState,
     viewModel: HomeViewModel,
     onSwipeLeft: () -> Unit,
     onSwipeRight: () -> Unit,
@@ -277,7 +316,7 @@ private fun SwappableCard(
 @Composable
 private fun Content(
     paddingValues: PaddingValues,
-    state: HomeViewModel.HomeState,
+    state: HomeState,
     viewModel: HomeViewModel
 ) {
     var currentIndex by remember { mutableIntStateOf(0) }
@@ -307,7 +346,7 @@ private fun Content(
         } else {
             Text(
                 text = "No hay más personas.",
-                color = Color.White,
+                color = Color.Black,
                 modifier = Modifier.padding(16.dp)
             )
         }
@@ -316,4 +355,4 @@ private fun Content(
 
 @Composable
 @Preview
-private fun Preview() = HomeScreen()
+private fun Preview() = HomeScreen({})
