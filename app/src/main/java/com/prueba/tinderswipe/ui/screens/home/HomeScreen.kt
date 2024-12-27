@@ -2,6 +2,7 @@ package com.prueba.tinderswipe.ui.screens.home
 
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -28,17 +29,14 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -47,7 +45,10 @@ import androidx.compose.ui.unit.dp
 import com.prueba.tinderswipe.R
 import com.prueba.tinderswipe.data.model.Persons
 import com.prueba.tinderswipe.ui.components.Card
+import com.prueba.tinderswipe.utils.performSwipeAnimation
 import kotlinx.coroutines.launch
+import org.koin.androidx.compose.koinViewModel
+import kotlin.math.abs
 import kotlin.math.roundToInt
 
 @Composable
@@ -59,20 +60,35 @@ fun HomeScreen(
 
 @Composable
 private fun Screen(
-    onSwitchTheme: () -> Unit
+    viewModel: HomeViewModel = koinViewModel(),
+    onSwitchTheme: () -> Unit,
 ) {
-    val context = LocalContext.current
-    val viewModel = HomeViewModel(context)
+    val swipeOffset = remember { Animatable(0f) }
+    val density = LocalDensity.current
+    val screenWidthPx = with(density) { LocalConfiguration.current.screenWidthDp.dp.toPx() }
     val state by viewModel.state.collectAsState()
     Scaffold(
+        containerColor = colorScheme.background,
         content = { paddingValues ->
             Content(
                 paddingValues,
                 state,
-                viewModel
+                viewModel,
+                onSwipeLeft = { viewModel.update { copy(currentIndex = currentIndex + 1) } },
+                onSwipeRight = { viewModel.update { copy(currentIndex = currentIndex + 1) } },
+                swipeOffset = swipeOffset,
+                screenWidthPx = screenWidthPx
             )
         },
-        bottomBar = { BottomBar() },
+        bottomBar = {
+            BottomBar(
+                onSwipeLeft = { viewModel.update { copy(currentIndex = currentIndex + 1) } },
+                onSwipeRight = { viewModel.update { copy(currentIndex = currentIndex + 1) } },
+                swipeOffset = swipeOffset,
+                screenWidthPx = screenWidthPx,
+                state = state
+            )
+        },
         topBar = {
             TopBar(
                 homeViewModel = viewModel,
@@ -80,13 +96,16 @@ private fun Screen(
                 onSwitchTheme = onSwitchTheme
             )
         },
-        containerColor = colorScheme.background
     )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TopBar(homeViewModel: HomeViewModel, state: HomeState, onSwitchTheme: () -> Unit) {
+fun TopBar(
+    homeViewModel: HomeViewModel,
+    state: HomeState,
+    onSwitchTheme: () -> Unit
+) {
     TopAppBar(
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = Color.Transparent
@@ -125,7 +144,15 @@ fun TopBar(homeViewModel: HomeViewModel, state: HomeState, onSwitchTheme: () -> 
 }
 
 @Composable
-fun BottomBar() {
+fun BottomBar(
+    swipeOffset: Animatable<Float, AnimationVector1D>,
+    screenWidthPx: Float,
+    state: HomeState,
+    onSwipeLeft: () -> Unit,
+    onSwipeRight: () -> Unit,
+) {
+    val coroutineScope = rememberCoroutineScope()
+    val color = if (!state.darkMode) Color.Black else Color.White
     BottomAppBar(
         containerColor = Color.Transparent,
     ) {
@@ -139,7 +166,7 @@ fun BottomBar() {
             BottomIcon(
                 icon = R.drawable.baseline_refresh_24,
                 contentDescription = "Refresh",
-                color = Color.Yellow,
+                color = color,
                 modifier = Modifier.size(40.dp),
                 onClick = { /*TODO*/ }
             )
@@ -147,15 +174,24 @@ fun BottomBar() {
             BottomIcon(
                 icon = R.drawable.baseline_close_24,
                 contentDescription = "Close",
-                color = Color.Red,
+                color = color,
                 modifier = Modifier.size(60.dp),
-                onClick = { /*TODO*/ }
+                onClick = {
+                    coroutineScope.launch {
+                        performSwipeAnimation(
+                            swipeOffset = swipeOffset,
+                            direction = -1f, // Dirección hacia la izquierda
+                            screenWidthPx = screenWidthPx,
+                            onSwipeAction = onSwipeLeft
+                        )
+                    }
+                }
             )
 
             BottomIcon(
                 icon = R.drawable.baseline_star_24,
                 contentDescription = "Star",
-                color = Color.Cyan,
+                color = color,
                 modifier = Modifier.size(40.dp),
                 onClick = { /*TODO*/ }
             )
@@ -163,15 +199,24 @@ fun BottomBar() {
             BottomIcon(
                 icon = R.drawable.baseline_favorite_24,
                 contentDescription = "Heart",
-                color = Color.Green,
+                color = color,
                 modifier = Modifier.size(60.dp),
-                onClick = { /*TODO*/ }
+                onClick = {
+                    coroutineScope.launch {
+                        performSwipeAnimation(
+                            swipeOffset = swipeOffset,
+                            direction = 1f,
+                            screenWidthPx = screenWidthPx,
+                            onSwipeAction = onSwipeRight
+                        )
+                    }
+                }
             )
 
             BottomIcon(
                 icon = R.drawable.baseline_bolt_24,
                 contentDescription = "Bolt",
-                color = Color.Magenta,
+                color = color,
                 modifier = Modifier.size(40.dp),
                 onClick = { /*TODO*/ }
             )
@@ -193,7 +238,8 @@ private fun BottomIcon(
                 color = color,
                 shape = CircleShape
             )
-            .clickable { onClick }
+            .padding(8.dp)
+            .clickable { onClick() }
     ) {
         Icon(
             painter = painterResource(id = icon),
@@ -210,12 +256,11 @@ private fun SwappableCard(
     nextPerson: Persons? = null,
     state: HomeState,
     viewModel: HomeViewModel,
+    swipeOffset: Animatable<Float, AnimationVector1D>,
+    screenWidthPx: Float,
     onSwipeLeft: () -> Unit,
     onSwipeRight: () -> Unit,
 ) {
-    val swipeOffset = remember { Animatable(0f) }
-    val density = LocalDensity.current
-    val screenWidthPx = with(density) { LocalConfiguration.current.screenWidthDp.dp.toPx() }
     val coroutineScope = rememberCoroutineScope()
 
     Box(
@@ -296,7 +341,7 @@ private fun SwappableCard(
                 .graphicsLayer {
                     rotationZ = (swipeOffset.value / 80f).coerceIn(-10f, 10f)
                     alpha =
-                        1f - (kotlin.math.abs(swipeOffset.value) / screenWidthPx / 1.5f).coerceIn(
+                        1f - (abs(swipeOffset.value) / screenWidthPx / 1.5f).coerceIn(
                             0f,
                             1f
                         )
@@ -317,36 +362,36 @@ private fun SwappableCard(
 private fun Content(
     paddingValues: PaddingValues,
     state: HomeState,
-    viewModel: HomeViewModel
+    viewModel: HomeViewModel,
+    swipeOffset: Animatable<Float, AnimationVector1D>,
+    screenWidthPx: Float,
+    onSwipeLeft: () -> Unit,
+    onSwipeRight: () -> Unit,
 ) {
-    var currentIndex by remember { mutableIntStateOf(0) }
-
     Box(
         modifier = Modifier
             .fillMaxSize()
             .padding(paddingValues),
         contentAlignment = Alignment.Center
     ) {
-        if (currentIndex < state.persons.size) {
-            val currentCard = state.persons[currentIndex]
-            val nextPerson = state.persons.getOrNull(currentIndex + 1)
+        if (state.persons.isNotEmpty() && state.currentIndex < state.persons.size) {
+            val currentCard = state.persons[state.currentIndex]
+            val nextPerson = state.persons.getOrNull(state.currentIndex + 1)
 
             SwappableCard(
                 person = currentCard,
                 nextPerson = nextPerson,
                 state = state,
                 viewModel = viewModel,
-                onSwipeLeft = {
-                    currentIndex += 1
-                },
-                onSwipeRight = {
-                    currentIndex += 1
-                },
+                swipeOffset = swipeOffset,
+                screenWidthPx = screenWidthPx,
+                onSwipeLeft = { onSwipeLeft() },
+                onSwipeRight = { onSwipeRight() },
             )
         } else {
             Text(
                 text = "No hay más personas.",
-                color = Color.Black,
+                color = if (!state.darkMode) Color.Black else Color.White,
                 modifier = Modifier.padding(16.dp)
             )
         }
@@ -355,4 +400,4 @@ private fun Content(
 
 @Composable
 @Preview
-private fun Preview() = HomeScreen({})
+private fun Preview() = HomeScreen {}

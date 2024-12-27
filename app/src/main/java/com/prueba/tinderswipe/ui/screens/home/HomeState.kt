@@ -28,5 +28,6 @@ data class HomeState(
     ),
     var showLike: Boolean = false,
     var showDislike: Boolean = false,
-    var darkMode: Boolean = false
+    var darkMode: Boolean = false,
+    var currentIndex: Int = 0,
 )
