@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -42,8 +43,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import coil3.compose.rememberAsyncImagePainter
 import com.prueba.tinderswipe.R
-import com.prueba.tinderswipe.data.model.Persons
+import com.prueba.tinderswipe.network.model.DragonBallCharacter
 import com.prueba.tinderswipe.ui.components.Card
 import com.prueba.tinderswipe.utils.performSwipeAnimation
 import kotlinx.coroutines.launch
@@ -180,7 +182,7 @@ fun BottomBar(
                     coroutineScope.launch {
                         performSwipeAnimation(
                             swipeOffset = swipeOffset,
-                            direction = -1f, // Dirección hacia la izquierda
+                            direction = -1f,
                             screenWidthPx = screenWidthPx,
                             onSwipeAction = onSwipeLeft
                         )
@@ -252,8 +254,8 @@ private fun BottomIcon(
 
 @Composable
 private fun SwappableCard(
-    person: Persons,
-    nextPerson: Persons? = null,
+    dragonBallCharacter: DragonBallCharacter,
+    nextDragonBallCharacter: DragonBallCharacter? = null,
     state: HomeState,
     viewModel: HomeViewModel,
     swipeOffset: Animatable<Float, AnimationVector1D>,
@@ -267,16 +269,15 @@ private fun SwappableCard(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        if (nextPerson != null) {
+        if (nextDragonBallCharacter != null) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp)
             ) {
                 Card(
-                    image = nextPerson.image,
-                    name = nextPerson.name,
-                    age = nextPerson.age,
+                    image = rememberAsyncImagePainter(nextDragonBallCharacter.image),
+                    character = nextDragonBallCharacter
                 )
             }
         }
@@ -348,11 +349,10 @@ private fun SwappableCard(
                 }
         ) {
             Card(
-                image = person.image,
-                name = person.name,
-                age = person.age,
                 showLike = state.showLike,
                 showDislike = state.showDislike,
+                image = rememberAsyncImagePainter(dragonBallCharacter.image),
+                character = dragonBallCharacter
             )
         }
     }
@@ -374,20 +374,24 @@ private fun Content(
             .padding(paddingValues),
         contentAlignment = Alignment.Center
     ) {
-        if (state.persons.isNotEmpty() && state.currentIndex < state.persons.size) {
-            val currentCard = state.persons[state.currentIndex]
-            val nextPerson = state.persons.getOrNull(state.currentIndex + 1)
+        if (state.isLoaded) {
+            CircularProgressIndicator()
+        } else if (state.currentIndex < (state.character?.size ?: 0)) {
+            val currentCard = state.character?.getOrNull(state.currentIndex)
+            val nextPerson = state.character?.getOrNull(state.currentIndex + 1)
 
-            SwappableCard(
-                person = currentCard,
-                nextPerson = nextPerson,
-                state = state,
-                viewModel = viewModel,
-                swipeOffset = swipeOffset,
-                screenWidthPx = screenWidthPx,
-                onSwipeLeft = { onSwipeLeft() },
-                onSwipeRight = { onSwipeRight() },
-            )
+            currentCard?.let {
+                SwappableCard(
+                    dragonBallCharacter = it,
+                    nextDragonBallCharacter = nextPerson,
+                    state = state,
+                    viewModel = viewModel,
+                    swipeOffset = swipeOffset,
+                    screenWidthPx = screenWidthPx,
+                    onSwipeLeft = { onSwipeLeft() },
+                    onSwipeRight = { onSwipeRight() },
+                )
+            }
         } else {
             Text(
                 text = "No hay más personas.",

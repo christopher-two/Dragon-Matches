@@ -1,12 +1,10 @@
 package com.prueba.tinderswipe.ui.components
 
-import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -20,18 +18,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.prueba.tinderswipe.R
+import com.prueba.tinderswipe.network.model.DragonBallCharacter
 
 @Composable
 fun Card(
-    @DrawableRes image: Int = R.drawable.men1,
-    name: String = "john Doe",
-    age: Int = 25,
+    character: DragonBallCharacter,
+    image: Painter,
     showLike: Boolean = false,
     showDislike: Boolean = false,
 ) {
@@ -41,20 +40,21 @@ fun Card(
             .padding(16.dp),
     ) {
         Column(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black)
+                .shadow(
+                    elevation = 5.dp,
+                    shape = RoundedCornerShape(16.dp)
+                ),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
             Image(
-                painter = painterResource(id = image),
+                painter = image,
                 contentDescription = "Logo",
-                modifier = Modifier
-                    .fillMaxSize()
-                    .shadow(
-                        elevation = 5.dp,
-                        shape = RoundedCornerShape(16.dp)
-                    ),
-                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.FillHeight,
             )
         }
 
@@ -100,19 +100,19 @@ fun Card(
                 .padding(16.dp),
             contentAlignment = Alignment.BottomStart
         ) {
-            Row(
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
+            Column(
+                horizontalAlignment = Alignment.Start,
+                verticalArrangement = Arrangement.Bottom
             ) {
                 Text(
-                    text = name,
+                    text = "Name: ${character.name}",
                     color = Color.White,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                 )
                 Spacer(modifier = Modifier.padding(6.dp))
                 Text(
-                    text = age.toString(),
+                    text = "Max Ki: ${character.maxKi}",
                     color = Color.White,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Medium,

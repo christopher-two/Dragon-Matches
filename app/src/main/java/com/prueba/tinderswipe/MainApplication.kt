@@ -1,6 +1,8 @@
 package com.prueba.tinderswipe
 
 import android.app.Application
+import com.prueba.tinderswipe.di.RepositoryModule
+import com.prueba.tinderswipe.di.ServiceModule
 import com.prueba.tinderswipe.di.appModule
 import com.prueba.tinderswipe.di.viewModelModule
 import com.prueba.tinderswipe.utils.ContextProvider
@@ -17,7 +19,12 @@ class MainApplication : Application(), KoinComponent {
         startKoin {
             androidLogger(Level.DEBUG)
             androidContext(this@MainApplication)
-            modules(appModule, viewModelModule)
+            modules(
+                appModule,
+                viewModelModule,
+                ServiceModule,
+                RepositoryModule
+            )
         }
     }
 }
