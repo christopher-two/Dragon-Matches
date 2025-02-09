@@ -4,7 +4,7 @@
 ---
 
 ## Captura de Pantalla 📸
-![Dragon Matches Preview](TinderDragonball-removebg-preview.png)
+![Dragon Matches Preview](TinderDragonball.png)
 
 ## Video de la App 🎥
 [![Video Demo](https://i.ytimg.com/vi_webp/nn_WOq-9HZI/oar2.webp)](https://youtube.com/shorts/nn_WOq-9HZI?feature=share)
