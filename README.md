@@ -42,7 +42,7 @@
 ## Descarga la App ⬇️
 ¡Prueba **Dragon Matches** ahora mismo!
 
-[Descargar APK](URL_DE_DESCARGA_DE_LA_APP)
+[Descargar APK](https://drive.google.com/file/d/1TJ8Cux9JAmlCqFjQsmxJrYtke4kScrlj/view?usp=sharing)
 
 ---
 
