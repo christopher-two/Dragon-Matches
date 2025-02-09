@@ -43,6 +43,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil3.compose.rememberAsyncImagePainter
 import com.prueba.tinderswipe.R
 import com.prueba.tinderswipe.network.model.DragonBallCharacter
@@ -130,17 +131,6 @@ fun TopBar(
             }
         },
         title = {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Start,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.tinder_2),
-                    contentDescription = "Logo",
-                    modifier = Modifier.size(32.dp)
-                )
-            }
         }
     )
 }
