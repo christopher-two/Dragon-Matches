@@ -1,9 +1,52 @@
-# Tinder Clone - Jetpack Compose  
-**Una aplicación de citas básica desarrollada en Jetpack Compose**, diseñada para practicar e implementar la funcionalidad de "swipe" característica de Tinder. Este proyecto es completamente offline, sin conexión a bases de datos o backend, y se centra exclusivamente en la experiencia de usuario.  
+# Dragon Matches 🐉✨
+**¡Encuentra tu compañero de aventuras en el mundo de Dragon Ball!**
 
-## Funcionalidades principales ✨  
-1. **Swipe para elegir**: Desliza a la derecha si te gusta alguien o a la izquierda para pasar.  
-2. **Interfaz moderna**: Construida con Jetpack Compose, priorizando diseño limpio y fluido.  
-3. **Simulación local**: Los datos de usuario son generados y gestionados localmente para simplificar la práctica del swipe.  
+---
 
-Este proyecto está orientado a aprender y experimentar con el desarrollo de interfaces interactivas en Android usando Jetpack Compose.  
+## Captura de Pantalla 📸
+![Dragon Matches Preview](TinderDragonball-removebg-preview.png)
+
+## Video de la App 🎥
+[![Video Demo](https://i.ytimg.com/vi_webp/nn_WOq-9HZI/oar2.webp)](https://youtube.com/shorts/nn_WOq-9HZI?feature=share)
+
+---
+
+## Características 🚀
+- **Swipe al estilo Tinder**: Desliza para elegir tus personajes favoritos de Dragon Ball.
+- **Perfiles detallados**: Descubre información, habilidades e imágenes de cada personaje.
+- **API real**: Datos obtenidos desde [Dragon Ball API](https://web.dragonball-api.com/).
+- **UI moderna**: Interfaz fluida y atractiva diseñada con Jetpack Compose.
+
+---
+
+## Tecnologías Utilizadas 🛠️
+
+### **Ktor**
+- **Uso**: Realizar solicitudes HTTP a la [API de Dragon Ball](https://web.dragonball-api.com/) para obtener datos de personajes.
+- **Ventaja**: Manejo eficiente de conexiones y respuestas en formato JSON.
+
+### **Coil**
+- **Uso**: Cargar y mostrar imágenes de los personajes desde la API de forma rápida y optimizada.
+- **Ventaja**: Caché de imágenes y carga asíncrona para una experiencia fluida.
+
+### **Jetpack Compose**
+- **Uso**: Desarrollo de toda la interfaz de usuario, aprovechando el componente `Swipe` para imitar la experiencia de Tinder.
+- **Ventaja**: UI declarativa, código más mantenible y animaciones integradas.
+
+### **Koin**
+- **Uso**: Inyección de dependencias para gestionar módulos como servicios de API, repositorios y ViewModels.
+- **Ventaja**: Simplifica la gestión de dependencias y mejora la testabilidad.
+
+---
+
+## Descarga la App ⬇️
+¡Prueba **Dragon Matches** ahora mismo!
+
+[Descargar APK](URL_DE_DESCARGA_DE_LA_APP)
+
+---
+
+## Cómo Contribuir o Ejecutar el Proyecto 🧑💻
+1. Clona el repositorio:
+   ```bash  
+   git clone URL_DEL_REPOSITORIO  
